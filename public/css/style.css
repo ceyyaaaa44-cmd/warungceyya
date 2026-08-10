@@ -1,0 +1,72 @@
+/* Tailwind / custom micro-animations & niceties */
+:root {
+  --brand: #2563eb;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* reachable subtle scrollbars */
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(37, 99, 235, 0.25); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* fade / slide page transitions */
+.page-enter { animation: fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* shake for login errors */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.shake { animation: shake .5s ease both; }
+
+/* sidebar link active indicator */
+.nav-item { transition: all .18s ease; }
+.nav-item:hover { background: rgba(37,99,235,.08); color: var(--brand); }
+.nav-item.active {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px rgba(37,99,235,.55);
+}
+
+/* grow-on-hover for cards/buttons */
+.hover-pop { transition: transform .18s ease, box-shadow .18s ease; }
+.hover-pop:hover { transform: translateY(-3px); }
+
+/* skeleton shimmer */
+.skeleton {
+  position: relative; overflow: hidden; background: #eef1f6;
+}
+.skeleton::after {
+  content: ''; position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* modal pop */
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(10px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-card { animation: modalIn .25s cubic-bezier(.22,1,.36,1) both; }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.overlay-in { animation: overlayIn .2s ease both; }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }

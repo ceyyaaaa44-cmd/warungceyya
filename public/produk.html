@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Produk — Warung Cemilan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="produk" class="bg-gray-50 text-gray-900 font-sans min-h-screen antialiased">
+
+  <div class="min-h-screen lg:flex">
+    <div id="sidebar"></div>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <div id="topbar"></div>
+
+      <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6 page-enter">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+          <div class="flex-1 flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div class="relative flex-1 sm:max-w-sm">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none">
+                <i data-lucide="search" class="w-5 h-5"></i>
+              </span>
+              <input id="search-input" type="text" placeholder="Cari produk..."
+                class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+            </div>
+            <div id="category-pills" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+          </div>
+          <button id="btn-add" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold
+                 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600
+                 shadow-lg shadow-blue-600/25 hover:shadow-xl hover:-translate-y-0.5 transition shrink-0">
+            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Produk
+          </button>
+        </div>
+
+        <div id="table-card" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[860px]">
+              <thead>
+                <tr class="text-left text-xs uppercase tracking-wider text-gray-400 border-b border-gray-100 bg-gray-50/60">
+                  <th class="px-6 py-3.5 font-semibold">Produk</th>
+                  <th class="px-6 py-3.5 font-semibold">Harga</th>
+                  <th class="px-6 py-3.5 font-semibold">Modal</th>
+                  <th class="px-6 py-3.5 font-semibold">Stok</th>
+                  <th class="px-6 py-3.5 font-semibold">Kategori</th>
+                  <th class="px-6 py-3.5 font-semibold">Status</th>
+                  <th class="px-6 py-3.5 font-semibold text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="product-rows">
+                <tr><td colspan="7" class="px-6 py-8"><div class="skeleton h-10 rounded-lg"></div><div class="skeleton h-10 rounded-lg mt-2"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="table-foot" class="hidden border-t border-gray-100 px-6 py-4 flex items-center justify-between text-sm text-gray-500">
+            <span id="result-count"></span>
+          </div>
+        </div>
+      </main>
+
+      <div id="footer"></div>
+    </div>
+  </div>
+
+  <!-- Modal Produk -->
+  <div id="product-modal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm overlay-in" data-close></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto modal-card">
+      <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+        <h3 id="modal-title" class="text-lg font-bold text-gray-900">Tambah Produk</h3>
+        <button data-close class="p-2 -mr-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="product-form" class="p-6 space-y-5" novalidate>
+        <input type="hidden" id="product-id" />
+
+        <div class="space-y-3 bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Foto & Icon Produk</label>
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <div id="image-preview" class="w-24 h-24 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-4xl overflow-hidden shrink-0 shadow-sm relative group">
+              <span id="preview-emoji">🛍️</span>
+              <img id="preview-img" class="w-full h-full object-cover hidden" alt="Preview" />
+            </div>
+            <div class="flex-1 w-full space-y-2">
+              <div class="flex items-center gap-2">
+                <input type="file" id="f-image-file" accept="image/*" class="hidden" />
+                <button type="button" id="btn-upload-img" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-xs font-semibold text-gray-700 transition">
+                  <i data-lucide="image-plus" class="w-4 h-4 text-blue-600"></i> Pilih Foto / Upload
+                </button>
+                <button type="button" id="btn-clear-img" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-red-600 hover:bg-red-50 transition hidden">
+                  <i data-lucide="x" class="w-3.5 h-3.5"></i> Hapus Foto
+                </button>
+              </div>
+              <input id="f-image-url" type="url" placeholder="Atau tempel URL Gambar (https://...)" class="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition text-xs" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-gray-500 mb-1.5">Atau pilih Emoji Icon:</label>
+            <div class="flex gap-1.5 flex-wrap" id="emoji-picker"></div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Produk <span class="text-red-500">*</span></label>
+          <input id="f-name" type="text" placeholder="cth: Burger Spesial" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Kategori</label>
+            <select id="f-category" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Satuan</label>
+            <select id="f-unit" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Barcode</label>
+            <input id="f-barcode" type="text" placeholder="899000..." class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Harga Jual (Rp)</label>
+            <input id="f-price" type="text" inputmode="numeric" placeholder="0" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Modal (Rp)</label>
+            <input id="f-modal" type="text" inputmode="numeric" placeholder="0" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">Stok</label>
+            <input id="f-stock" type="number" min="0" placeholder="0" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="radio" name="f-status" value="aktif" class="accent-blue-600 w-4 h-4" checked /> Aktif
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="radio" name="f-status" value="nonaktif" class="accent-blue-600 w-4 h-4" /> Nonaktif
+            </label>
+          </div>
+        </div>
+      </form>
+
+      <div class="flex items-center justify-end gap-3 px-6 py-5 border-t border-gray-100 bg-gray-50/60 rounded-b-2xl">
+        <button data-close class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition">Batal</button>
+        <button id="btn-save" class="px-5 py-2.5 text-sm font-semibold text-white rounded-xl bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/30 hover:shadow-lg hover:-translate-y-0.5 transition">
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/produk.js"></script>
+</body>
+</html>

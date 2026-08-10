@@ -1,0 +1,22 @@
+{
+  "name": "warungceyya",
+  "version": "1.0.0",
+  "description": "Aplikasi penjualan Warung Cemilan",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "warung",
+    "penjualan",
+    "pos",
+    "admin"
+  ],
+  "author": "Warung Cemilan",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

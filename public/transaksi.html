@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riwayat — Warung Cemilan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="transaksi" class="bg-gray-50 text-gray-900 font-sans min-h-screen antialiased">
+
+  <div class="min-h-screen lg:flex">
+    <div id="sidebar"></div>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <div id="topbar"></div>
+
+      <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6 page-enter space-y-4">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none">
+                <i data-lucide="search" class="w-5 h-5"></i>
+              </span>
+              <input id="ri-search" type="text" placeholder="Cari No. Invoice / Kasir..."
+                class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+            </div>
+            <div>
+              <select id="ri-method" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500">
+                <option value="Semua">Semua Metode</option>
+                <option>Tunai</option><option>QRIS</option><option>Transfer</option>
+              </select>
+            </div>
+            <div>
+              <select id="ri-status" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500">
+                <option value="Semua">Semua Status</option>
+                <option>Lunas</option>
+              </select>
+            </div>
+            <button id="btn-box" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-600/25 transition">
+              <i data-lucide="filter" class="w-4 h-4"></i> Filter
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr class="text-left text-xs uppercase tracking-wider text-gray-400 border-b border-gray-100 bg-gray-50/60">
+                  <th class="px-6 py-3.5 font-semibold">Invoice</th>
+                  <th class="px-6 py-3.5 font-semibold">Tanggal</th>
+                  <th class="px-6 py-3.5 font-semibold">Kasir</th>
+                  <th class="px-6 py-3.5 font-semibold">Metode</th>
+                  <th class="px-6 py-3.5 font-semibold">Status</th>
+                  <th class="px-6 py-3.5 font-semibold">Total</th>
+                  <th class="px-6 py-3.5 font-semibold text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="ri-rows">
+                <tr><td colspan="7" class="px-6 py-8"><div class="skeleton h-10 rounded-lg"></div><div class="skeleton h-10 rounded-lg mt-2"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <div id="footer"></div>
+    </div>
+  </div>
+
+  <!-- Detail pesanan -->
+  <div id="detail-modal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm overlay-in" data-close></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-card max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 sticky top-0 bg-white">
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Detail Pesanan</h3>
+          <p class="text-xs text-gray-400" id="det-id">—</p>
+        </div>
+        <button data-close class="p-2 -mr-2 rounded-lg text-gray-400 hover:bg-gray-100 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-6">
+        <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+          <span id="detail-date"></span>
+          <span class="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600">Lunas</span>
+        </div>
+        <div id="detail-items" class="space-y-2 mb-5"></div>
+        <div class="space-y-2 border-t border-gray-100 pt-4 text-sm">
+          <div class="flex justify-between text-gray-500"><span>Subtotal</span><span id="d-sub"></span></div>
+          <div class="flex justify-between text-gray-500"><span>Diskon</span><span id="d-disc"></span></div>
+          <div class="flex justify-between text-gray-500"><span>Pajak (<span id="d-taxrate"></span>)</span><span id="d-tax"></span></div>
+          <div class="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-dashed border-gray-200"><span>TOTAL</span><span id="d-total"></span></div>
+          <div class="flex justify-between text-gray-600"><span>Bayar</span><span id="d-paid"></span></div>
+          <div class="flex justify-between text-emerald-600 font-semibold"><span>Kembalian</span><span id="d-change"></span></div>
+        </div>
+        <div class="mt-5 flex gap-3">
+          <button id="btn-print-detail" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"><i data-lucide="printer" class="inline w-4 h-4 mr-1"></i>Cetak</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/transaksi.js"></script>
+</body>
+</html>

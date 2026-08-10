@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kasir — Warung Cemilan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="kasir" class="bg-gray-50 text-gray-900 font-sans min-h-screen antialiased">
+
+  <div class="min-h-screen lg:flex">
+    <div id="sidebar"></div>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <div id="topbar"></div>
+
+      <main class="flex-1 px-4 sm:px-6 lg:px-8 py-5">
+        <div class="grid grid-cols-1 lg:grid-cols-[180px_1fr_340px] gap-4 h-[calc(100vh-7.5rem)]">
+
+          <!-- Kategori -->
+          <aside class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 overflow-y-auto no-scrollbar">
+            <p class="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Kategori</p>
+            <div class="space-y-1" id="cat-buttons">
+              <div class="skeleton h-11 rounded-xl"></div>
+              <div class="skeleton h-11 rounded-xl"></div>
+            </div>
+          </aside>
+
+          <!-- Produk -->
+          <section class="flex flex-col gap-3 min-h-0">
+            <div class="relative shrink-0">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none">
+                <i data-lucide="search" class="w-5 h-5"></i>
+              </span>
+              <input id="pos-search" type="text" placeholder="Cari produk atau barcode..."
+                class="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm shadow-sm" />
+            </div>
+            <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 overflow-y-auto no-scrollbar flex-1 pb-1">
+              <div class="skeleton h-32 rounded-2xl"></div>
+              <div class="skeleton h-32 rounded-2xl"></div>
+              <div class="skeleton h-32 rounded-2xl"></div>
+              <div class="skeleton h-32 rounded-2xl"></div>
+            </div>
+          </section>
+
+          <!-- Keranjang -->
+          <aside class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col min-h-0">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h2 class="font-bold text-gray-900">Pesanan</h2>
+              <span class="text-xs text-gray-400" id="cart-count">0 item</span>
+            </div>
+
+            <div id="cart-list" class="flex-1 overflow-y-auto no-scrollbar py-3 space-y-2 min-h-0">
+              <p class="text-center text-gray-400 text-sm py-10">Belum ada produk.<br />Klik produk untuk menambah.</p>
+            </div>
+
+            <div class="space-y-2 pt-3 border-t border-gray-100">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-500">Subtotal</span>
+                <span class="font-semibold text-gray-800" id="c-subtotal">Rp 0</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-500 flex items-center gap-1.5">
+                  Diskon
+                  <i data-lucide="percent" class="w-3.5 h-3.5 text-gray-400"></i>
+                </span>
+                <input id="c-discount" type="text" inputmode="numeric" placeholder="0"
+                  class="w-24 text-right px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-sm" />
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-500 flex items-center gap-1.5">Pajak <span class="text-xs text-gray-400" id="c-taxrate">(10%)</span></span>
+                <span class="font-semibold text-gray-800" id="c-tax">Rp 0</span>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-dashed border-gray-200">
+                <span class="font-bold text-gray-900">TOTAL</span>
+                <span class="font-extrabold text-xl text-blue-600" id="c-total">Rp 0</span>
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button id="btn-save-pos" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition">Simpan</button>
+                <button id="btn-pay" class="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg shadow-blue-600/30 transition">Bayar</button>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </main>
+
+      <div id="footer"></div>
+    </div>
+  </div>
+
+  <!-- Modal pembayaran -->
+  <div id="pay-modal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm overlay-in" data-close></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md modal-card overflow-hidden">
+      <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Pembayaran</h3>
+          <p class="text-xs text-gray-400" id="pay-invoice">#INV —</p>
+        </div>
+        <button data-close class="p-2 -mr-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="px-6 py-5 space-y-5">
+        <div>
+          <p class="text-xs text-gray-400 mb-1">TOTAL</p>
+          <p class="text-3xl font-extrabold text-gray-900" id="pay-total">Rp 0</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Bayar (Rp)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 text-sm">Rp</span>
+            <input id="pay-amount" type="text" inputmode="numeric" placeholder="0"
+              class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Metode</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-method="Tunai" class="method-btn border-2 border-blue-500 text-blue-600 bg-blue-50 rounded-xl py-2.5 text-sm font-semibold flex flex-col items-center gap-1">
+              <i data-lucide="banknote" class="w-5 h-5"></i> Tunai
+            </button>
+            <button type="button" data-method="QRIS" class="pay-btn border-2 border-gray-200 text-gray-500 hover:border-blue-300 rounded-xl py-2.5 text-sm font-semibold flex flex-col items-center gap-1">
+              <i data-lucide="qrcode" class="w-5 h-5"></i> QRIS
+            </button>
+            <button type="button" data-method="Transfer" class="pay-btn border-2 border-gray-200 text-gray-500 hover:border-blue-300 rounded-xl py-2.5 text-sm font-semibold flex flex-col items-center gap-1">
+              <i data-lucide="smartphone" class="w-5 h-5"></i> Transfer
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-3">
+          <span class="text-sm font-medium text-emerald-700">Kembalian</span>
+          <span class="font-extrabold text-emerald-700 text-lg" id="pay-change">Rp 0</span>
+        </div>
+      </div>
+
+      <div class="px-6 py-5 border-t border-gray-100 bg-gray-50/60 rounded-b-2xl">
+        <button id="btn-confirm-pay" class="w-full py-3 rounded-xl text-white font-bold text-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-lg shadow-emerald-600/30 transition">
+          BAYAR SEKARANG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/kasir.js"></script>
+</body>
+</html>

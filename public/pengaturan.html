@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pengaturan — Warung Cemilan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="pengaturan" class="bg-gray-50 text-gray-900 font-sans min-h-screen antialiased">
+
+  <div class="min-h-screen lg:flex">
+    <div id="sidebar"></div>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <div id="topbar"></div>
+
+      <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6 page-enter">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Profil toko -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 class="font-bold text-gray-900 mb-1">Profil Toko</h2>
+            <p class="text-xs text-gray-400 mb-6">Informasi dan preferensi toko Anda</p>
+
+            <div class="flex items-start gap-5 mb-6">
+              <div id="logo-preview" class="w-20 h-20 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-4xl">🏪</div>
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-600 mb-2">Logo</label>
+                <div class="flex flex-wrap gap-1.5" id="logo-picker"></div>
+              </div>
+            </div>
+
+            <form id="settings-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4" novalidate>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Toko</label>
+                <input id="set-name" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">No. HP</label>
+                <input id="set-phone" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Alamat</label>
+                <input id="set-address" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tagline</label>
+                <input id="set-tagline" type="text" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Jenis Printer</label>
+                <select id="set-printer" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm">
+                  <option value="thermal">Printer Thermal</option>
+                  <option value="laser">Laser / Inkjet</option>
+                  <option value="none">Tanpa printer</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Pajak (%)</label>
+                <input id="set-tax" type="number" min="0" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">Diskon Default (Rp)</label>
+                <input id="set-discount" type="text" inputmode="numeric" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              </div>
+              <div class="sm:col-span-2 pt-2">
+                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/30 transition">
+                  <i data-lucide="save" class="w-4 h-4"></i> Simpan Pengaturan
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Database -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 h-fit">
+            <h2 class="font-bold text-gray-900 mb-1">Database</h2>
+            <p class="text-xs text-gray-400 mb-5">Kelola backup & restore database</p>
+
+            <div class="space-y-3">
+              <button id="btn-backup" class="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition">
+                <span class="flex items-center gap-3">
+                  <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-blue-100 text-blue-600"><i data-lucide="download" class="w-4 h-4"></i></span>
+                  <span class="text-left">
+                    <p class="text-sm font-semibold text-gray-800">Backup Database</p>
+                    <p class="text-xs text-gray-400">Unduh file data (JSON)</p>
+                  </span>
+                </span>
+              </button>
+
+              <div class="px-4 py-3.5 rounded-xl border border-dashed border-gray-300">
+                <span class="flex items-center gap-3">
+                  <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600"><i data-lucide="upload" class="w-4 h-4"></i></span>
+                  <span class="flex-1 text-left">
+                    <p class="text-sm font-semibold text-gray-800">Restore Database</p>
+                    <p class="text-xs text-gray-400">Pulihkan dari file backup</p>
+                  </span>
+                  <label class="cursor-pointer text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg hover:bg-emerald-100 transition">
+                    Pilih
+                    <input type="file" id="restore-input" accept=".json,application/json" class="hidden" />
+                  </label>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <div id="footer"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/pengaturan.js"></script>
+</body>
+</html>

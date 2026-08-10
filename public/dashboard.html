@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Warung Cemilan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-page="dashboard" class="bg-gray-50 text-gray-900 font-sans min-h-screen antialiased">
+
+  <div class="min-h-screen lg:flex">
+    <div id="sidebar"></div>
+
+    <div class="flex-1 flex flex-col min-w-0">
+      <div id="topbar"></div>
+
+      <main id="content" class="flex-1 px-4 sm:px-6 lg:px-8 py-6 page-enter space-y-6">
+        <!-- Stat cards -->
+        <section id="stat-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="skeleton h-32 rounded-2xl"></div>
+          <div class="skeleton h-32 rounded-2xl"></div>
+          <div class="skeleton h-32 rounded-2xl"></div>
+          <div class="skeleton h-32 rounded-2xl"></div>
+        </section>
+
+        <!-- Chart + Best sellers -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div class="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h2 class="font-bold text-gray-900">Grafik Penjualan</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Pendapatan 7 hari terakhir</p>
+              </div>
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                <i data-lucide="calendar" class="w-3.5 h-3.5"></i> 7 Hari
+              </span>
+            </div>
+            <div class="h-64 sm:h-72 relative">
+              <div id="chart-skeleton" class="skeleton absolute inset-0 rounded-xl"></div>
+              <canvas id="sales-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="font-bold text-gray-900">Produk Terlaris</h2>
+              <a href="produk.html" class="text-xs font-medium text-blue-600 hover:text-blue-700 transition inline-flex items-center gap-1">
+                Lihat semua <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </a>
+            </div>
+            <div id="best-sellers" class="space-y-2.5">
+              <div class="skeleton h-14 rounded-xl"></div>
+              <div class="skeleton h-14 rounded-xl"></div>
+              <div class="skeleton h-14 rounded-xl"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Recent transactions + low stock -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div class="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-5 sm:px-6 pt-5 pb-4">
+              <div>
+                <h2 class="font-bold text-gray-900">Transaksi Terbaru</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Aktivitas penjualan terakhir</p>
+              </div>
+              <a href="transaksi.html" class="text-xs font-medium text-blue-600 hover:text-blue-700 transition inline-flex items-center gap-1">
+                Semua <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </a>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm min-w-[560px]">
+                <thead>
+                  <tr class="text-left text-xs uppercase tracking-wider text-gray-400 border-y border-gray-100 bg-gray-50/60">
+                    <th class="px-6 py-3 font-semibold">Produk</th>
+                    <th class="px-6 py-3 font-semibold">Qty</th>
+                    <th class="px-6 py-3 font-semibold">Total</th>
+                    <th class="px-6 py-3 font-semibold text-right">Waktu</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-tx">
+                  <tr><td colspan="4" class="px-6 py-6"><div class="skeleton h-8 rounded-lg"></div><div class="skeleton h-8 rounded-lg mt-2"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="font-bold text-gray-900">Stok Menipis</h2>
+              <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full" id="low-count">—</span>
+            </div>
+            <div id="low-stock" class="space-y-2.5">
+              <div class="skeleton h-14 rounded-xl"></div>
+              <div class="skeleton h-14 rounded-xl"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div id="footer"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
