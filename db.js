@@ -4,8 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DATA_DIR = path.join(__dirname, 'data');
+const isVercel = !!process.env.VERCEL;
+const DATA_DIR = isVercel ? '/tmp' : path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'data.json');
+const SOURCE_DB = path.join(__dirname, 'data', 'data.json');
 
 let db = null;
 
@@ -271,8 +273,17 @@ function seedDatabase() {
 function load() {
   ensureDir(DATA_DIR);
   if (!fs.existsSync(DB_FILE)) {
-    seedDatabase();
-    return db;
+    if (isVercel && fs.existsSync(SOURCE_DB)) {
+      try {
+        fs.copyFileSync(SOURCE_DB, DB_FILE);
+      } catch (e) {
+        seedDatabase();
+        return db;
+      }
+    } else {
+      seedDatabase();
+      return db;
+    }
   }
   try {
     db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));

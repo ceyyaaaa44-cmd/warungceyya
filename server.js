@@ -582,6 +582,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.listen(PORT, () => {
-  console.log('\n  Warung Cemilan app running at: http://localhost:' + PORT + '\n');
-});
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(PORT, () => {
+    console.log('\n  Warung Cemilan app running at: http://localhost:' + PORT + '\n');
+  });
+}
