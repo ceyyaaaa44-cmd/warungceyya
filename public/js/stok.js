@@ -33,7 +33,7 @@
       <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition group">
         <td class="px-6 py-3.5">
           <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-xl">${p.emoji}</span>
+            ${app.renderProductImage(p, 'w-10 h-10 rounded-xl')}
             <div>
               <p class="font-semibold text-gray-800">${p.name}</p>
               <p class="text-xs text-gray-400">${p.unit}</p>

@@ -47,7 +47,7 @@
       return `
         <div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition">
           ${chip}
-          <span class="text-2xl shrink-0">${item.emoji || '🛍️'}</span>
+          ${app.renderProductImage(item, 'w-10 h-10 rounded-xl')}
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-gray-800 truncate">${item.name}</p>
             <p class="text-xs text-gray-400">${app.formatNumber(item.qty)} terjual</p>
@@ -95,7 +95,7 @@
       const textTone = p.stock <= 30 ? 'text-red-500' : 'text-amber-500';
       return `
         <div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition">
-          <span class="text-2xl">${p.emoji || '🛍️'}</span>
+          ${app.renderProductImage(p, 'w-10 h-10 rounded-xl')}
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between mb-1.5">
               <p class="text-sm font-semibold text-gray-800 truncate pr-2">${p.name}</p>

@@ -64,7 +64,7 @@
       ? report.bestSellers.map((b, i) => `
           <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition">
             <span class="w-6 h-6 rounded-full ${i < 3 ? 'bg-blue-600' : 'bg-gray-200'} text-white text-[11px] font-bold flex items-center justify-center shrink-0 ${i >= 3 ? '!bg-gray-300 !text-gray-500' : ''}">${i + 1}</span>
-            <span class="text-xl">${b.emoji}</span>
+            ${app.renderProductImage(b, 'w-9 h-9 rounded-lg')}
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-gray-800 truncate">${b.name}</p>
               <p class="text-xs text-gray-400">${app.formatNumber(b.qty)} terjual</p>

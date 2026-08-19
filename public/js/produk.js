@@ -69,7 +69,7 @@
       <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/70 transition group">
         <td class="px-6 py-3.5">
           <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-2xl shrink-0">${p.emoji}</div>
+            ${app.renderProductImage(p, 'w-11 h-11 rounded-xl')}
             <div>
               <p class="font-semibold text-gray-800">${p.name}</p>
               <p class="text-xs text-gray-400">${p.unit} · ${p.barcode || 'tanpa barcode'}</p>
