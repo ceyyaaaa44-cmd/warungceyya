@@ -306,14 +306,24 @@ function ensureCollections() {
     changed = true;
   }
   // Assign images to seed products if empty
+  const DEFAULT_FOOD_IMAGES = [
+    'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1546173159-315724a31696?w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&auto=format&fit=crop',
+  ];
   if (Array.isArray(db.products)) {
-    db.products.forEach((p) => {
+    db.products.forEach((p, idx) => {
       if (!p.image) {
         const seedMatch = SEED_PRODUCTS.find((s) => s.name.toLowerCase() === p.name.toLowerCase());
         if (seedMatch && seedMatch.image) {
           p.image = seedMatch.image;
-          changed = true;
+        } else {
+          p.image = DEFAULT_FOOD_IMAGES[idx % DEFAULT_FOOD_IMAGES.length];
         }
+        changed = true;
       }
     });
   }
