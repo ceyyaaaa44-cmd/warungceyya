@@ -58,10 +58,10 @@
       const low = p.stock <= 20;
       const out = p.stock <= 0;
       const imgHtml = p.image
-        ? `<div class="w-full h-28 sm:h-32 bg-gradient-to-br from-blue-50/60 to-indigo-50/60 flex items-center justify-center p-2">
-            <img src="${p.image}" alt="${p.name}" class="w-full h-full object-contain rounded-xl group-hover:scale-105 transition duration-300" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center text-4xl select-none\\'>${p.emoji || '🍔'}</div>';" />
+        ? `<div class="w-full h-24 sm:h-28 bg-gray-50/80 flex items-center justify-center p-1.5">
+            <img src="${p.image}" alt="${p.name}" class="w-full h-full object-contain rounded-lg group-hover:scale-105 transition duration-300" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center text-3xl select-none\\'>${p.emoji || '🍔'}</div>';" />
           </div>`
-        : `<div class="w-full h-28 sm:h-32 rounded-t-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-4xl select-none">${p.emoji || '🍔'}</div>`;
+        : `<div class="w-full h-24 sm:h-28 bg-gray-50 flex items-center justify-center text-3xl select-none">${p.emoji || '🍔'}</div>`;
 
       return `
         <button data-add="${p.id}" ${out ? 'disabled' : ''}
@@ -72,15 +72,15 @@
               ${out ? 'Habis' : 'Stok ' + p.stock}
             </span>
           </div>
-          <div class="p-3.5 flex-1 flex flex-col justify-between">
+          <div class="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
             <div>
-              <p class="font-bold text-gray-800 text-sm leading-snug line-clamp-1 group-hover:text-blue-600 transition">${p.name}</p>
-              <p class="text-[11px] text-gray-400 mt-0.5">${p.unit || 'Pcs'}</p>
+              <p class="font-bold text-gray-800 text-xs sm:text-sm leading-tight line-clamp-1 group-hover:text-blue-600 transition">${p.name}</p>
+              <p class="text-[10px] sm:text-[11px] text-gray-400 mt-0.5">${p.unit || 'Pcs'}</p>
             </div>
-            <div class="mt-2 flex items-center justify-between">
-              <p class="text-blue-600 font-extrabold text-sm sm:text-base">${app.formatT(p.price)}</p>
-              <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition">
-                <i data-lucide="plus" class="w-4 h-4"></i>
+            <div class="mt-1.5 flex items-center justify-between">
+              <p class="text-blue-600 font-extrabold text-xs sm:text-sm">${app.formatT(p.price)}</p>
+              <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
               </span>
             </div>
           </div>
