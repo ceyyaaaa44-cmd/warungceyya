@@ -200,14 +200,63 @@
     });
     lucide.createIcons();
     const total = num(document.getElementById('pay-total').textContent.replace(/[^\d]/g, ''));
+    const cashSec = document.getElementById('cash-payment-section');
+    const qrisSec = document.getElementById('qris-payment-section');
     if (m === 'Tunai') {
+      cashSec.classList.remove('hidden');
+      qrisSec.classList.add('hidden');
       document.getElementById('pay-amount').readOnly = false;
       document.getElementById('pay-amount').value = '';
+    } else if (m === 'QRIS') {
+      cashSec.classList.add('hidden');
+      qrisSec.classList.remove('hidden');
+      document.getElementById('pay-amount').value = total.toLocaleString('id-ID');
+      document.getElementById('pay-change').textContent = 'Rp 0';
     } else {
+      cashSec.classList.remove('hidden');
+      qrisSec.classList.add('hidden');
       document.getElementById('pay-amount').readOnly = true;
       document.getElementById('pay-amount').value = total.toLocaleString('id-ID');
       document.getElementById('pay-change').textContent = 'Rp 0';
     }
+  }
+
+  let html5QrCode = null;
+  function openScanner() {
+    const modal = document.getElementById('scanner-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("reader");
+    }
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      (decodedText) => {
+        closeScanner();
+        const found = products.find(p => p.barcode === decodedText || p.name.toLowerCase().includes(decodedText.toLowerCase()));
+        if (found) {
+          addToCart(found.id);
+          app.toast('Produk ditambahkan: ' + found.name);
+        } else {
+          document.getElementById('pos-search').value = decodedText;
+          currentSearch = decodedText;
+          renderProducts();
+          app.toast('Pencarian barcode: ' + decodedText, 'info');
+        }
+      },
+      (error) => {}
+    ).catch(err => {
+      app.toast('Tidak dapat mengakses kamera.', 'error');
+    });
+  }
+
+  function closeScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+      html5QrCode.stop().catch(() => {});
+    }
+    document.getElementById('scanner-modal').classList.add('hidden');
+    document.getElementById('scanner-modal').classList.remove('flex');
   }
 
   function updateChange() {
@@ -267,6 +316,9 @@ const payload = {
     document.getElementById('btn-pay').addEventListener('click', openPay);
     document.getElementById('btn-save-pos').addEventListener('click', () => app.toast('Gunakan tombol Bayar untuk menyimpan transaksi.', 'info'));
     document.getElementById('btn-confirm-pay').addEventListener('click', confirmPay);
+    document.getElementById('btn-scan-barcode').addEventListener('click', openScanner);
+    document.getElementById('btn-close-scanner').addEventListener('click', closeScanner);
+    document.getElementById('close-scanner').addEventListener('click', closeScanner);
 
     Promise.all([app.get('api/products-full'), app.get('api/categories'), app.get('api/settings')])
       .then(([pd, cd, st]) => {
