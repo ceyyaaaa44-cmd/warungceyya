@@ -58,7 +58,9 @@
       const low = p.stock <= 20;
       const out = p.stock <= 0;
       const imgHtml = p.image
-        ? `<img src="${p.image}" alt="${p.name}" class="w-full h-28 sm:h-32 object-cover rounded-t-2xl group-hover:scale-105 transition duration-300" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-28 sm:h-32 rounded-t-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-4xl select-none\\'>${p.emoji || '🍔'}</div>';" />`
+        ? `<div class="w-full h-28 sm:h-32 bg-gradient-to-br from-blue-50/60 to-indigo-50/60 flex items-center justify-center p-2">
+            <img src="${p.image}" alt="${p.name}" class="w-full h-full object-contain rounded-xl group-hover:scale-105 transition duration-300" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center text-4xl select-none\\'>${p.emoji || '🍔'}</div>';" />
+          </div>`
         : `<div class="w-full h-28 sm:h-32 rounded-t-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-4xl select-none">${p.emoji || '🍔'}</div>`;
 
       return `

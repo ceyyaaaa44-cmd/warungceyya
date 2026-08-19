@@ -60,7 +60,9 @@
     const emoji = (p && p.emoji) || '🛍️';
     const image = (p && p.image) || '';
     if (image) {
-      return `<img src="${image}" alt="${(p && p.name) ? p.name.replace(/"/g, '&quot;') : ''}" class="${classes} object-cover" onerror="this.onerror=null; this.outerHTML='<div class=\\'${classes} bg-gray-100 flex items-center justify-center text-xl shrink-0\\'>${emoji}</div>';" />`;
+      return `<div class="${classes} bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+        <img src="${image}" alt="${(p && p.name) ? p.name.replace(/"/g, '&quot;') : ''}" class="w-full h-full object-contain" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-full h-full flex items-center justify-center text-xl\\'>${emoji}</div>';" />
+      </div>`;
     }
     return `<div class="${classes} bg-gray-100 flex items-center justify-center text-xl shrink-0">${emoji}</div>`;
   };
