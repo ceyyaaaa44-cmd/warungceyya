@@ -127,7 +127,11 @@
   function load() {
     return Promise.all([app.get('api/products-full'), app.get('api/stock')])
       .then(([p, h]) => { products = p.products; history = h.history; renderRows(); renderHistory(); })
-      .catch((e) => app.toast(e.message || 'Gagal memuat stok.', 'error'));
+      .catch((e) => {
+        app.toast(e.message || 'Gagal memuat stok.', 'error');
+        app.clearSkeleton('stock-rows', '<tr><td colspan="3" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat data stok.</td></tr>');
+        app.clearSkeleton('stock-history', '<p class="text-sm text-red-400 text-center py-8">Gagal memuat riwayat stok.</p>');
+      });
   }
 
   app.boot(() => {

@@ -178,15 +178,18 @@
       lucide.createIcons();
     } catch (e) {
       app.toast(e.message || 'Gagal memuat dashboard.', 'error');
+      app.clearSkeleton('stat-grid', '<div class="col-span-full text-center py-10 text-red-400 text-sm">Gagal memuat statistik.</div>');
+      app.clearSkeleton('best-sellers');
+      document.getElementById('chart-skeleton').style.display = 'none';
     }
 
     app.get('api/transactions?limit=8')
       .then((t) => { document.getElementById('recent-tx').innerHTML = buildRecent(t.transactions); lucide.createIcons(); })
-      .catch(() => {});
+      .catch(() => { app.clearSkeleton('recent-tx'); });
 
     app.get('api/products')
       .then((p) => { document.getElementById('low-stock').innerHTML = buildLowStock(p.products); lucide.createIcons(); })
-      .catch(() => {});
+      .catch(() => { app.clearSkeleton('low-stock'); });
   }
 
   // Run after shell is ready

@@ -135,7 +135,7 @@
             <p class="text-xs text-gray-400">${app.formatT(it.p.price)}</p>
           </div>
           <div class="flex items-center gap-1.5">
-            <button data-min="${it.p.id}" class="w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center transition">
+            <button data-dec="${it.p.id}" class="w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center transition">
               <i data-lucide="minus" class="w-3.5 h-3.5"></i>
             </button>
             <span class="w-7 text-center font-semibold text-sm">${it.qty}</span>
@@ -332,6 +332,10 @@ const payload = {
         renderProducts();
         updateTotals();
       })
-.catch((e) => app.toast(e.message || 'Gagal memuat kasir.', 'error'));
+      .catch((e) => {
+        app.toast(e.message || 'Gagal memuat kasir.', 'error');
+        app.clearSkeleton('cat-buttons', '<div class="text-sm text-gray-400 text-center py-4">Gagal memuat kategori.</div>');
+        app.clearSkeleton('product-grid', '<div class="col-span-full text-center py-16 text-red-400 text-sm">Gagal memuat produk.</div>');
+      });
   });
 })();

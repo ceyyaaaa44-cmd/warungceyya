@@ -17,6 +17,8 @@
   "author": "Warung Cemilan",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "firebase": "^12.19.0",
+    "firebase-admin": "^14.3.0"
   }
 }

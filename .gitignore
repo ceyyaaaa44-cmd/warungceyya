@@ -6,6 +6,15 @@ data/
 *.log
 *.tmp
 
+# Firebase service account (NEVER commit!)
+serviceAccountKey.json
+
+# Duplicate project folder
+warungceyya/
+
+# Debug artifacts
+public/js/produk_live.js
+
 # OS
 Thumbs.db
 .DS_Store

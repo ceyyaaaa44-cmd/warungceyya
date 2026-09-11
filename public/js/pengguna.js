@@ -48,7 +48,10 @@
   }
 
   function load() {
-    return app.get('api/users').then((d) => { users = d.users; render(); }).catch((e) => app.toast(e.message, 'error'));
+    return app.get('api/users').then((d) => { users = d.users; render(); }).catch((e) => {
+      app.toast(e.message, 'error');
+      app.clearSkeleton('user-rows', '<tr><td colspan="5" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat pengguna.</td></tr>');
+    });
   }
 
   function openModal(user) {

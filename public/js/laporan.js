@@ -39,7 +39,12 @@
     if (filters.category !== 'Semua') params.set('category', filters.category);
     return app.get('api/report?' + params.toString())
       .then((d) => { report = d; render(); })
-      .catch((e) => app.toast(e.message || 'Gagal memuat laporan.', 'error'));
+      .catch((e) => {
+        app.toast(e.message || 'Gagal memuat laporan.', 'error');
+        app.clearSkeleton('report-summary', '<div class="col-span-full text-center py-10 text-red-400 text-sm">Gagal memuat ringkasan laporan.</div>');
+        app.clearSkeleton('best-sellers');
+        document.getElementById('rpt-chart-skel').style.display = 'none';
+      });
   }
 
   function render() {

@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body data-page="produk" class="bg-gray-50 text-gray-900 font-sans min-h-screen antialiased">
@@ -88,7 +89,7 @@
           <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Foto & Icon Produk</label>
           <div class="flex flex-col sm:flex-row items-center gap-4">
             <div id="image-preview" class="w-24 h-24 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-4xl overflow-hidden shrink-0 shadow-sm relative group">
-              <span id="preview-emoji">🛍️</span>
+              <span id="emoji-preview">🛍️</span>
               <img id="preview-img" class="w-full h-full object-cover hidden" alt="Preview" />
             </div>
             <div class="flex-1 w-full space-y-2">
@@ -126,7 +127,23 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Barcode</label>
-            <input id="f-barcode" type="text" placeholder="899000..." class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+            <div class="flex gap-2">
+              <input id="f-barcode" type="text" placeholder="899000..." class="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm" />
+              <button type="button" id="btn-gen-barcode" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-xs font-semibold text-gray-700 transition">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-600"></i> Generate
+              </button>
+              <button type="button" id="btn-scan-barcode-modal" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-xs font-semibold text-gray-700 transition">
+                <i data-lucide="scan" class="w-3.5 h-3.5 text-emerald-600"></i> Scan
+              </button>
+            </div>
+            <div id="barcode-preview" class="mt-2 hidden">
+              <div class="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-100 p-3">
+                <svg id="barcode-svg" class="flex-1"></svg>
+                <button type="button" id="btn-print-barcode" class="shrink-0 p-2 rounded-lg text-gray-500 hover:bg-white hover:text-blue-600 transition" title="Cetak Barcode">
+                  <i data-lucide="printer" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -164,6 +181,23 @@
           Simpan
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Barcode Scanner -->
+  <div id="produk-scanner-modal" class="fixed inset-0 z-[90] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" data-close-scanner></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg text-gray-900 flex items-center gap-2">
+          <i data-lucide="scan" class="w-5 h-5 text-emerald-600"></i> Scan Barcode Produk
+        </h3>
+        <button id="btn-close-produk-scanner" class="p-2 rounded-lg text-gray-400 hover:bg-gray-100">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="produk-reader" class="w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-200"></div>
+      <p class="text-xs text-center text-gray-500">Arahkan kamera ke barcode pada kemasan produk.</p>
     </div>
   </div>
 

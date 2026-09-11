@@ -1,16 +1,13 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
-const db = require('./db');
+const db = require('./firestore-db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const DEFAULT_USER = { id: 'usr_admin', name: 'Admin Warung', username: 'admin', role: 'admin' };
-
-db.load();
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,13 +21,13 @@ function requireAuth(req, res, next) {
 
 app.get('/api/settings', (req, res) => res.json(db.getDB().settings));
 
-app.put('/api/settings', (req, res) => {
+app.put('/api/settings', async (req, res) => {
   const s = db.getDB().settings;
   const allowed = ['storeName', 'tagline', 'address', 'phone', 'logo', 'printer'];
   allowed.forEach((k) => { if (req.body[k] !== undefined) s[k] = req.body[k]; });
   if (req.body.taxRate !== undefined) s.taxRate = Number(req.body.taxRate) || 0;
   if (req.body.discountDefault !== undefined) s.discountDefault = Number(req.body.discountDefault) || 0;
-  db.save();
+  await db.saveSettings();
   res.json(s);
 });
 
@@ -40,14 +37,23 @@ app.get('/api/backup', (req, res) => {
   res.send(JSON.stringify(db.getDB(), null, 2));
 });
 
-app.post('/api/restore', (req, res) => {
+app.post('/api/restore', async (req, res) => {
   const data = req.body && req.body.data;
   if (!data) return res.status(400).json({ error: 'Data backup kosong.' });
   try {
     const obj = typeof data === 'string' ? JSON.parse(data) : data;
     if (!Array.isArray(obj.products)) return res.status(400).json({ error: 'File backup tidak valid.' });
-    fs.writeFileSync(db.DB_FILE, JSON.stringify(obj, null, 2), 'utf8');
-    db.load();
+    const d = db.getDB();
+    if (obj.settings) Object.assign(d.settings, obj.settings);
+    d.categories = obj.categories || [];
+    d.products = obj.products || [];
+    d.suppliers = obj.suppliers || [];
+    d.customers = obj.customers || [];
+    d.users = obj.users || [];
+    d.orders = obj.orders || [];
+    d.transactions = obj.transactions || [];
+    d.stockHistory = obj.stockHistory || [];
+    await db.save();
     res.json({ ok: true });
   } catch (e) {
     res.status(400).json({ error: 'File backup tidak valid.' });
@@ -113,17 +119,17 @@ app.get('/api/categories', (req, res) => {
   res.json({ categories: db.getDB().categories.map(publicCategory) });
 });
 
-app.post('/api/categories', (req, res) => {
+app.post('/api/categories', async (req, res) => {
   const { name, icon, color } = req.body || {};
   const clean = String(name || '').trim();
   if (!clean) return res.status(400).json({ error: 'Nama kategori wajib diisi.' });
   const cat = { id: db.uid('cat_'), name: clean, icon: icon || '🗂️', color: color || '#64748b', createdAt: db.now() };
   db.getDB().categories.push(cat);
-  db.save();
+  await db.addDoc('categories', cat);
   res.status(201).json({ category: publicCategory(cat) });
 });
 
-app.put('/api/categories/:id', (req, res) => {
+app.put('/api/categories/:id', async (req, res) => {
   const cat = db.getDB().categories.find((c) => c.id === req.params.id);
   if (!cat) return res.status(404).json({ error: 'Kategori tidak ditemukan.' });
   const { name, icon, color } = req.body || {};
@@ -134,18 +140,18 @@ app.put('/api/categories/:id', (req, res) => {
   }
   if (icon !== undefined) cat.icon = icon;
   if (color !== undefined) cat.color = color;
-  db.save();
+  await db.updateDoc('categories', cat.id, cat);
   res.json({ category: publicCategory(cat) });
 });
 
-app.delete('/api/categories/:id', (req, res) => {
+app.delete('/api/categories/:id', async (req, res) => {
   const d = db.getDB();
   const idx = d.categories.findIndex((c) => c.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Kategori tidak ditemukan.' });
   const using = d.products.filter((p) => p.categoryId === req.params.id).length;
   if (using) return res.status(400).json({ error: 'Kategori masih dipakai ' + using + ' produk.' });
   d.categories.splice(idx, 1);
-  db.save();
+  await db.deleteDoc('categories', req.params.id);
   res.json({ ok: true });
 });
 
@@ -201,7 +207,7 @@ function parseProductBody(body, existing) {
   return out;
 }
 
-app.post('/api/products', (req, res) => {
+app.post('/api/products', async (req, res) => {
   const first = db.getDB().categories[0];
   const parsed = parseProductBody({
     ...req.body,
@@ -227,33 +233,33 @@ app.post('/api/products', (req, res) => {
     updatedAt: db.now(),
   };
   db.getDB().products.push(p);
-  db.save();
+  await db.addDoc('products', p);
   res.status(201).json({ product: enrichProduct(p) });
 });
 
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', async (req, res) => {
   const p = db.getDB().products.find((x) => x.id === req.params.id);
   if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan.' });
   const parsed = parseProductBody(req.body, p);
   if (parsed.error) return res.status(400).json({ error: parsed.error });
   Object.assign(p, parsed);
   p.updatedAt = db.now();
-  db.save();
+  await db.updateDoc('products', p.id, p);
   res.json({ product: enrichProduct(p) });
 });
 
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', async (req, res) => {
   const d = db.getDB();
   const idx = d.products.findIndex((x) => x.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Produk tidak ditemukan.' });
   d.products.splice(idx, 1);
-  db.save();
+  await db.deleteDoc('products', req.params.id);
   res.json({ ok: true });
 });
 
 /* ------------------------------ stock ------------------------------ */
 
-app.post('/api/products/:id/stock', requireAuth, (req, res) => {
+app.post('/api/products/:id/stock', requireAuth, async (req, res) => {
   const d = db.getDB();
   const p = d.products.find((x) => x.id === req.params.id);
   if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan.' });
@@ -264,7 +270,7 @@ app.post('/api/products/:id/stock', requireAuth, (req, res) => {
   if (type === 'keluar' && p.stock - n < 0) return res.status(400).json({ error: 'Stok tidak mencukupi.' });
   p.stock += type === 'masuk' ? n : -n;
   p.updatedAt = db.now();
-  d.stockHistory.unshift({
+  const stockEntry = {
     id: db.uid('stk_'),
     productId: p.id,
     productName: p.name,
@@ -274,8 +280,12 @@ app.post('/api/products/:id/stock', requireAuth, (req, res) => {
     reason: reason || (type === 'masuk' ? 'Pembelian' : 'Penyesuaian'),
     user: req.user.name,
     createdAt: db.now(),
-  });
-  db.save();
+  };
+  d.stockHistory.unshift(stockEntry);
+  await Promise.all([
+    db.updateDoc('products', p.id, p),
+    db.addDoc('stockHistory', stockEntry),
+  ]);
   res.json({ product: enrichProduct(p) });
 });
 
@@ -311,7 +321,7 @@ app.get('/api/orders/:id', (req, res) => {
   res.json({ order: o, settings: db.getDB().settings });
 });
 
-app.post('/api/orders', requireAuth, (req, res) => {
+app.post('/api/orders', requireAuth, async (req, res) => {
   const d = db.getDB();
   const { items, discount, method, paid, kasir } = req.body || {};
   if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Pesanan kosong.' });
@@ -354,11 +364,13 @@ app.post('/api/orders', requireAuth, (req, res) => {
   };
   d.orders.unshift(order);
 
+  const txEntries = [];
+  const stockEntries = [];
   cleaned.forEach((it) => {
     const prod = d.products.find((x) => x.id === it.productId);
     prod.stock -= it.qty;
     prod.updatedAt = db.now();
-    d.stockHistory.unshift({
+    const stk = {
       id: db.uid('stk_'),
       productId: it.productId,
       productName: it.productName,
@@ -368,8 +380,10 @@ app.post('/api/orders', requireAuth, (req, res) => {
       reason: 'Penjualan ' + order.id,
       user: order.kasir,
       createdAt: order.createdAt,
-    });
-    d.transactions.push({
+    };
+    stockEntries.push(stk);
+    d.stockHistory.unshift(stk);
+    const tx = {
       id: db.uid('trx_'),
       invoiceNo: order.id,
       productId: it.productId,
@@ -383,19 +397,29 @@ app.post('/api/orders', requireAuth, (req, res) => {
       method,
       kasir: order.kasir,
       createdAt: order.createdAt,
-    });
+    };
+    txEntries.push(tx);
+    d.transactions.push(tx);
   });
 
-  db.save();
+  const saves = [db.addDoc('orders', order), db.saveSettings()];
+  cleaned.forEach((it) => {
+    const prod = d.products.find((x) => x.id === it.productId);
+    saves.push(db.updateDoc('products', it.productId, prod));
+  });
+  stockEntries.forEach((s) => saves.push(db.addDoc('stockHistory', s)));
+  txEntries.forEach((t) => saves.push(db.addDoc('transactions', t)));
+  await Promise.all(saves);
+
   res.status(201).json({ order });
 });
 
-app.delete('/api/orders/:id', (req, res) => {
+app.delete('/api/orders/:id', async (req, res) => {
   const d = db.getDB();
   const idx = d.orders.findIndex((x) => x.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
   d.orders.splice(idx, 1);
-  db.save();
+  await db.deleteDoc('orders', req.params.id);
   res.json({ ok: true });
 });
 
@@ -484,31 +508,31 @@ app.get('/api/users', (req, res) => {
   res.json({ users: db.getDB().users.map((u) => ({ id: u.id, name: u.name, username: u.username, role: u.role, status: u.status, createdAt: u.createdAt })) });
 });
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const d = db.getDB();
   const o = { id: db.uid('usr_'), name: req.body.name || '', username: req.body.username || '', role: req.body.role || 'kasir', status: 'aktif', createdAt: db.now() };
   if (!String(o.name).trim() || !String(o.username).trim()) return res.status(400).json({ error: 'Nama dan username wajib diisi.' });
   d.users.push(o);
-  db.save();
+  await db.addDoc('users', o);
   res.status(201).json({ user: o });
 });
 
-app.put('/api/users/:id', (req, res) => {
+app.put('/api/users/:id', async (req, res) => {
   const o = db.getDB().users.find((x) => x.id === req.params.id);
   if (!o) return res.status(404).json({ error: 'Pengguna tidak ditemukan.' });
   if (req.body.name !== undefined) o.name = req.body.name;
   if (req.body.role !== undefined) o.role = req.body.role;
   if (req.body.status !== undefined) o.status = req.body.status;
-  db.save();
+  await db.updateDoc('users', o.id, o);
   res.json({ user: o });
 });
 
-app.delete('/api/users/:id', (req, res) => {
+app.delete('/api/users/:id', async (req, res) => {
   const arr = db.getDB().users;
   const idx = arr.findIndex((x) => x.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Pengguna tidak ditemukan.' });
   arr.splice(idx, 1);
-  db.save();
+  await db.deleteDoc('users', req.params.id);
   res.json({ ok: true });
 });
 
@@ -516,31 +540,31 @@ app.delete('/api/users/:id', (req, res) => {
 
 app.get('/api/suppliers', (req, res) => res.json({ suppliers: db.getDB().suppliers }));
 
-app.post('/api/suppliers', (req, res) => {
+app.post('/api/suppliers', async (req, res) => {
   const d = db.getDB();
   const o = { id: db.uid('sup_'), name: req.body.name || '', phone: req.body.phone || '', address: req.body.address || '', createdAt: db.now() };
   if (!String(o.name).trim()) return res.status(400).json({ error: 'Nama supplier wajib diisi.' });
   d.suppliers.push(o);
-  db.save();
+  await db.addDoc('suppliers', o);
   res.status(201).json({ supplier: o });
 });
 
-app.put('/api/suppliers/:id', (req, res) => {
+app.put('/api/suppliers/:id', async (req, res) => {
   const o = db.getDB().suppliers.find((x) => x.id === req.params.id);
   if (!o) return res.status(404).json({ error: 'Supplier tidak ditemukan.' });
   if (req.body.name !== undefined) o.name = req.body.name;
   if (req.body.phone !== undefined) o.phone = req.body.phone;
   if (req.body.address !== undefined) o.address = req.body.address;
-  db.save();
+  await db.updateDoc('suppliers', o.id, o);
   res.json({ supplier: o });
 });
 
-app.delete('/api/suppliers/:id', (req, res) => {
+app.delete('/api/suppliers/:id', async (req, res) => {
   const arr = db.getDB().suppliers;
   const idx = arr.findIndex((x) => x.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Supplier tidak ditemukan.' });
   arr.splice(idx, 1);
-  db.save();
+  await db.deleteDoc('suppliers', req.params.id);
   res.json({ ok: true });
 });
 
@@ -548,30 +572,30 @@ app.delete('/api/suppliers/:id', (req, res) => {
 
 app.get('/api/customers', (req, res) => res.json({ customers: db.getDB().customers }));
 
-app.post('/api/customers', (req, res) => {
+app.post('/api/customers', async (req, res) => {
   const d = db.getDB();
   const o = { id: db.uid('cus_'), name: req.body.name || '', phone: req.body.phone || '', createdAt: db.now() };
   if (!String(o.name).trim()) return res.status(400).json({ error: 'Nama pelanggan wajib diisi.' });
   d.customers.push(o);
-  db.save();
+  await db.addDoc('customers', o);
   res.status(201).json({ customer: o });
 });
 
-app.put('/api/customers/:id', (req, res) => {
+app.put('/api/customers/:id', async (req, res) => {
   const o = db.getDB().customers.find((x) => x.id === req.params.id);
   if (!o) return res.status(404).json({ error: 'Pelanggan tidak ditemukan.' });
   if (req.body.name !== undefined) o.name = req.body.name;
   if (req.body.phone !== undefined) o.phone = req.body.phone;
-  db.save();
+  await db.updateDoc('customers', o.id, o);
   res.json({ customer: o });
 });
 
-app.delete('/api/customers/:id', (req, res) => {
+app.delete('/api/customers/:id', async (req, res) => {
   const arr = db.getDB().customers;
   const idx = arr.findIndex((x) => x.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Pelanggan tidak ditemukan.' });
   arr.splice(idx, 1);
-  db.save();
+  await db.deleteDoc('customers', req.params.id);
   res.json({ ok: true });
 });
 
@@ -582,10 +606,21 @@ app.use((req, res, next) => {
   next();
 });
 
-if (process.env.VERCEL) {
-  module.exports = app;
-} else {
+/* ------------------------------ startup ------------------------------ */
+
+async function start() {
+  await db.load();
+  console.log('[Firestore] Data loaded from Firestore into memory cache.');
   app.listen(PORT, () => {
     console.log('\n  Warung Cemilan app running at: http://localhost:' + PORT + '\n');
+  });
+}
+
+if (process.env.VERCEL) {
+  module.exports = (async () => { await db.load(); return app; })();
+} else {
+  start().catch((err) => {
+    console.error('[Startup] Failed to start:', err.message);
+    process.exit(1);
   });
 }

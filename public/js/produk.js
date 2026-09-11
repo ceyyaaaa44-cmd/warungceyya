@@ -9,6 +9,75 @@
   const UNITS = ['Porsi', 'Pcs', 'Gelas', 'Botol', 'Pack', 'Kg', 'Lusin'];
   const EMOJIS = ['🍔', '🍕', '🍟', '🍜', '🍲', '🍗', '🥟', '🍛', '🥪', '🧋', '🥤', '🍊', '🥭', '☕', '🍵', '💧', '🍨', '🍩', '🍫', '🍞', '🥨', '🍥', '🛍️'];
 
+  /* ------------------------------ barcode ------------------------------ */
+
+  function generateBarcode() {
+    const prefix = '899';
+    let code = prefix;
+    for (let i = prefix.length; i < 12; i++) code += Math.floor(Math.random() * 10);
+    let sum = 0;
+    for (let i = 0; i < 12; i++) sum += parseInt(code[i]) * (i % 2 === 0 ? 1 : 3);
+    code += String((10 - (sum % 10)) % 10);
+    return code;
+  }
+
+  function renderBarcodeSVG(code, target) {
+    const el = document.getElementById(target);
+    if (!el || !code) { if (el) el.innerHTML = ''; return; }
+    try {
+      const digits = code.replace(/\D/g, '');
+      if (digits.length < 4) { el.innerHTML = '<span style="font-size:11px;color:#999">Terlalu pendek</span>'; return; }
+      const W = 2, H = 40, PAD = 10;
+      const bars = [];
+      const EAN_L = [[0,0,0,1,1,0,1],[0,0,1,1,0,0,1],[0,1,0,0,1,0,1],[0,1,1,1,0,0,1],[1,0,0,0,0,1,1],[1,0,1,1,0,0,1],[1,1,0,0,0,0,1],[1,1,0,1,1,0,1],[1,1,1,0,0,0,1],[1,1,1,1,1,0,1]];
+      const EAN_R = [[1,1,1,0,0,1,0],[1,1,0,0,1,1,0],[1,1,0,1,1,0,0],[1,0,0,0,0,1,0],[1,0,1,1,1,0,0],[1,1,0,0,0,1,0],[1,0,0,1,0,0,0],[1,0,0,0,1,0,0],[1,0,0,1,0,0,0],[1,1,1,0,0,1,0]];
+      bars.push(0, 0, 1, 0);
+      const half = Math.min(6, Math.ceil(digits.length / 2));
+      for (let i = 0; i < half; i++) { const d = parseInt(digits[i]) || 0; const pat = EAN_L[d] || EAN_L[0]; pat.forEach((v) => bars.push(v ? 1 : 0)); if (i < half - 1) bars.push(0); }
+      bars.push(1, 0, 1, 0);
+      for (let i = half; i < digits.length; i++) { const d = parseInt(digits[i]) || 0; const pat = EAN_R[d] || EAN_R[0]; pat.forEach((v) => bars.push(v ? 1 : 0)); if (i < digits.length - 1) bars.push(0); }
+      bars.push(0, 1, 0, 0, 1, 0, 1);
+      const totalW = PAD * 2 + bars.length * W;
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalW} ${H + 16}" width="${totalW}" height="${H + 16}" style="display:block">`;
+      svg += `<rect width="${totalW}" height="${H + 16}" fill="white"/>`;
+      let x = PAD;
+      bars.forEach((b) => { if (b) svg += `<rect x="${x}" y="2" width="${W}" height="${H}" fill="black"/>`; x += W; });
+      svg += `<text x="${totalW / 2}" y="${H + 14}" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">${digits}</text>`;
+      svg += '</svg>';
+      el.innerHTML = svg;
+    } catch (e) {
+      el.innerHTML = '<span style="font-size:11px;color:#999">Gagal render barcode</span>';
+    }
+  }
+
+  function showBarcodePreview(code) {
+    try {
+      var wrap = document.getElementById('barcode-preview');
+      if (!wrap) return;
+      if (!code) { wrap.classList.add('hidden'); return; }
+      wrap.classList.remove('hidden');
+      renderBarcodeSVG(code, 'barcode-svg');
+    } catch (e) { /* ignore */ }
+  }
+
+  function printBarcode(code, name) {
+    const w = window.open('', '_blank');
+    if (!w) { app.toast('Izinkan popup untuk mencetak.', 'info'); return; }
+    const svgEl = document.getElementById('barcode-svg');
+    const svgData = svgEl ? svgEl.outerHTML : '';
+    w.document.write(`<!DOCTYPE html><html><head><title>Barcode - ${name}</title><style>
+      body{font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0}
+      .label{text-align:center;margin-top:8px;font-size:11px;font-weight:600}
+      .code{font-family:monospace;font-size:10px;color:#666}
+    </style></head><body>
+      ${svgData}
+      <div class="label">${name}</div>
+      <div class="code">${code}</div>
+      <script>window.onload=function(){window.print()};<\/script>
+    </body></html>`);
+    w.document.close();
+  }
+
   /* ------------------------------ emoji / unit ------------------------------ */
 
   function buildEmojiPicker(selected) {
@@ -82,20 +151,17 @@
         <td class="px-6 py-3.5">${catChip(p)}</td>
         <td class="px-6 py-3.5">${statusBadge(p.status)}</td>
         <td class="px-6 py-3.5">
-          <div class="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
-            <button data-edit="${p.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition">
+          <div class="flex items-center justify-end gap-2">
+            <button data-edit="${p.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition" style="pointer-events:auto">
               <i data-lucide="pencil" class="w-3.5 h-3.5"></i> Edit
             </button>
-            <button data-del="${p.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition">
+            <button data-del="${p.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition" style="pointer-events:auto">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus
             </button>
           </div>
         </td>
       </tr>`).join('');
     lucide.createIcons();
-
-    tbody.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openEdit(b.dataset.edit)));
-    tbody.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => openDelete(b.dataset.del)));
   }
 
   function load() {
@@ -104,7 +170,10 @@
     if (currentCatId !== 'Semua') params.set('catId', currentCatId);
     return app.get('api/products?' + params.toString())
       .then((d) => { render(d.products); buildPills(); })
-      .catch((e) => app.toast(e.message || 'Gagal memuat produk.', 'error'));
+      .catch((e) => {
+        app.toast(e.message || 'Gagal memuat produk.', 'error');
+        app.clearSkeleton('product-rows', '<tr><td colspan="7" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat produk.</td></tr>');
+      });
   }
 
   function buildPills() {
@@ -137,10 +206,28 @@
     document.querySelectorAll('input[name="f-status"]').forEach((r) => {
       r.checked = product ? r.value === (product.status || 'aktif') : r.value === 'aktif';
     });
-    const modal = document.getElementById('product-modal');
+    var imgUrl = product ? (product.image || '') : '';
+    document.getElementById('f-image-url').value = imgUrl;
+    var previewImg = document.getElementById('preview-img');
+    var previewEmoji = document.getElementById('emoji-preview');
+    var btnClear = document.getElementById('btn-clear-img');
+    if (imgUrl) {
+      previewImg.src = imgUrl;
+      previewImg.classList.remove('hidden');
+      previewEmoji.classList.add('hidden');
+      btnClear.classList.remove('hidden');
+    } else {
+      previewImg.src = '';
+      previewImg.classList.add('hidden');
+      previewEmoji.classList.remove('hidden');
+      btnClear.classList.add('hidden');
+    }
+    document.getElementById('f-image-file').value = '';
+    showBarcodePreview(product ? (product.barcode || '') : '');
+    var modal = document.getElementById('product-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    setTimeout(() => document.getElementById('f-name').focus(), 60);
+    setTimeout(function () { document.getElementById('f-name').focus(); }, 60);
   }
 
   function closeModal() {
@@ -178,6 +265,7 @@
       modal: app.escapeInput.toNumber(document.getElementById('f-modal').value),
       stock: parseInt(document.getElementById('f-stock').value, 10),
       emoji: document.getElementById('emoji-preview').textContent,
+      image: document.getElementById('f-image-url').value.trim(),
       status: status ? status.value : 'aktif',
     };
     if (!payload.name) { app.toast('Nama produk wajib diisi.', 'error'); return; }
@@ -199,6 +287,13 @@
   /* --------------------------------- boot --------------------------------- */
 
   app.boot(() => {
+    document.addEventListener('click', function (e) {
+      var editBtn = e.target.closest('[data-edit]');
+      if (editBtn) { openEdit(editBtn.getAttribute('data-edit')); return; }
+      var delBtn = e.target.closest('[data-del]');
+      if (delBtn) { openDelete(delBtn.getAttribute('data-del')); return; }
+    });
+
     document.getElementById('product-form').addEventListener('submit', (e) => { e.preventDefault(); saveProduct(e); });
     document.getElementById('btn-save').addEventListener('click', () => document.getElementById('product-form').requestSubmit());
     document.getElementById('btn-add').addEventListener('click', () => openModal('Tambah Produk', null));
@@ -211,6 +306,84 @@
     });
     document.querySelectorAll('#product-modal [data-close]').forEach((el) => el.addEventListener('click', closeModal));
 
-    app.get('api/categories').then((c) => { categories = c.categories; return load(); }).catch((e) => app.toast(e.message, 'error'));
+    document.getElementById('btn-upload-img').addEventListener('click', () => document.getElementById('f-image-file').click());
+    document.getElementById('f-image-file').addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('preview-img').src = e.target.result;
+          document.getElementById('preview-img').classList.remove('hidden');
+          document.getElementById('emoji-preview').classList.add('hidden');
+          document.getElementById('f-image-url').value = e.target.result;
+          document.getElementById('btn-clear-img').classList.remove('hidden');
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+    });
+    document.getElementById('f-image-url').addEventListener('input', function () {
+      const url = this.value.trim();
+      if (url) {
+        document.getElementById('preview-img').src = url;
+        document.getElementById('preview-img').classList.remove('hidden');
+        document.getElementById('emoji-preview').classList.add('hidden');
+        document.getElementById('btn-clear-img').classList.remove('hidden');
+      }
+    });
+    document.getElementById('btn-clear-img').addEventListener('click', () => {
+      document.getElementById('preview-img').src = '';
+      document.getElementById('preview-img').classList.add('hidden');
+      document.getElementById('emoji-preview').classList.remove('hidden');
+      document.getElementById('f-image-url').value = '';
+      document.getElementById('f-image-file').value = '';
+      document.getElementById('btn-clear-img').classList.add('hidden');
+    });
+
+    document.getElementById('btn-gen-barcode').addEventListener('click', () => {
+      var code = generateBarcode();
+      document.getElementById('f-barcode').value = code;
+      showBarcodePreview(code);
+    });
+    document.getElementById('f-barcode').addEventListener('input', function () {
+      showBarcodePreview(this.value.trim());
+    });
+    document.getElementById('btn-print-barcode').addEventListener('click', () => {
+      var code = document.getElementById('f-barcode').value.trim();
+      var name = document.getElementById('f-name').value.trim() || 'Produk';
+      if (!code) { app.toast('Barcode kosong.', 'error'); return; }
+      printBarcode(code, name);
+    });
+
+    var produkQrCode = null;
+    function openProdukScanner() {
+      var modal = document.getElementById('produk-scanner-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (!produkQrCode) produkQrCode = new Html5Qrcode('produk-reader');
+      produkQrCode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        function (decodedText) {
+          closeProdukScanner();
+          document.getElementById('f-barcode').value = decodedText;
+          showBarcodePreview(decodedText);
+          app.toast('Barcode berhasil di-scan: ' + decodedText);
+        },
+        function () {}
+      ).catch(function () { app.toast('Tidak dapat mengakses kamera.', 'error'); });
+    }
+    function closeProdukScanner() {
+      if (produkQrCode && produkQrCode.isScanning) produkQrCode.stop().catch(function () {});
+      var modal = document.getElementById('produk-scanner-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    document.getElementById('btn-scan-barcode-modal').addEventListener('click', openProdukScanner);
+    document.getElementById('btn-close-produk-scanner').addEventListener('click', closeProdukScanner);
+    document.querySelectorAll('#produk-scanner-modal [data-close-scanner]').forEach((el) => el.addEventListener('click', closeProdukScanner));
+
+    app.get('api/categories').then((c) => { categories = c.categories; return load(); }).catch((e) => {
+      app.toast(e.message, 'error');
+      app.clearSkeleton('product-rows', '<tr><td colspan="7" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat kategori.</td></tr>');
+    });
   });
 })();

@@ -50,7 +50,10 @@
         orders = d.orders.filter((o) => filters.method === 'Semua' || o.method === filters.method);
         render();
       })
-      .catch((e) => app.toast(e.message || 'Gagal memuat riwayat.', 'error'));
+      .catch((e) => {
+        app.toast(e.message || 'Gagal memuat riwayat.', 'error');
+        app.clearSkeleton('ri-rows', '<tr><td colspan="7" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat riwayat transaksi.</td></tr>');
+      });
   }
 
   function openDetail(id) {

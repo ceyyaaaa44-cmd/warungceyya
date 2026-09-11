@@ -33,7 +33,10 @@
   }
 
   function load() {
-    return app.get('api/suppliers').then((d) => { list = d.suppliers; render(); }).catch((e) => app.toast(e.message, 'error'));
+    return app.get('api/suppliers').then((d) => { list = d.suppliers; render(); }).catch((e) => {
+      app.toast(e.message, 'error');
+      app.clearSkeleton('sup-rows', '<tr><td colspan="4" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat supplier.</td></tr>');
+    });
   }
 
   function openModal(s) {

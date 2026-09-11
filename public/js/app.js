@@ -54,6 +54,15 @@
     let t; return function (...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); };
   };
 
+  /* ---------------- skeleton helpers ---------------- */
+
+  app.clearSkeleton = function (containerId, fallbackHtml) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = fallbackHtml || '<p class="text-sm text-gray-400 text-center py-6">Gagal memuat data.</p>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  };
+
   /* ---------------- image helper ---------------- */
 
   app.renderProductImage = function (p, classes = 'w-12 h-12 rounded-xl') {

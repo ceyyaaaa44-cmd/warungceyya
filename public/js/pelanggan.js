@@ -34,7 +34,10 @@
   }
 
   function load() {
-    return app.get('api/customers').then((d) => { list = d.customers; render(); }).catch((e) => app.toast(e.message, 'error'));
+    return app.get('api/customers').then((d) => { list = d.customers; render(); }).catch((e) => {
+      app.toast(e.message, 'error');
+      app.clearSkeleton('cus-rows', '<tr><td colspan="3" class="px-6 py-12 text-center text-sm text-red-400">Gagal memuat pelanggan.</td></tr>');
+    });
   }
 
   function openModal(c) {

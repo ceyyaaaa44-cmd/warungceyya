@@ -42,7 +42,10 @@
   }
 
   function load() {
-    return app.get('api/categories').then((d) => { cats = d.categories; render(); }).catch((e) => app.toast(e.message, 'error'));
+    return app.get('api/categories').then((d) => { cats = d.categories; render(); }).catch((e) => {
+      app.toast(e.message, 'error');
+      app.clearSkeleton('cat-grid', '<div class="col-span-full text-center py-10 text-red-400 text-sm">Gagal memuat kategori.</div>');
+    });
   }
 
   function resetForm() {
