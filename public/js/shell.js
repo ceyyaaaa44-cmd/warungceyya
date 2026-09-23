@@ -3,8 +3,17 @@
   const app = window.Warung;
 
   async function boot(renderContent) {
-    // Mock user for display
-    const user = { id: 'usr_admin', username: 'admin', name: 'Admin Warung', role: 'admin', email: 'admin@warungceyya.id' };
+    let user = null;
+    try {
+      const stored = localStorage.getItem('warung_user');
+      if (stored) user = JSON.parse(stored);
+    } catch (e) {}
+
+    if (!user) {
+      window.location.href = 'index.html';
+      return;
+    }
+
     app.renderShell(user);
     if (typeof renderContent === 'function') renderContent(user);
   }

@@ -68,6 +68,16 @@
   }
 
   function sidebarBody() {
+    let currentUser = { name: 'Admin Warung', role: 'Administrator' };
+    try {
+      const stored = localStorage.getItem('warung_user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        currentUser.name = u.name || 'Pengguna';
+        currentUser.role = u.role === 'admin' ? 'Administrator' : 'Kasir';
+      }
+    } catch(e) {}
+
     return `
       <div class="flex items-center gap-3 px-5 pt-6 pb-5">
         <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
@@ -85,11 +95,14 @@
       </nav>
       <div class="p-4 border-t border-gray-100">
         <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-          <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">WC</div>
+          <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">${currentUser.name.substring(0,2).toUpperCase()}</div>
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-semibold text-gray-800 truncate">Admin Warung</p>
-            <p class="text-xs text-gray-400 truncate">Administrator</p>
+            <p class="text-sm font-semibold text-gray-800 truncate">${currentUser.name}</p>
+            <p class="text-xs text-gray-400 truncate">${currentUser.role}</p>
           </div>
+          <button id="btn-logout" title="Keluar" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
         </div>
       </div>`;
   }
@@ -145,6 +158,19 @@
     }
     document.getElementById('btn-drawer')?.addEventListener('click', openDrawer);
     overlay?.addEventListener('click', closeDrawer);
+
+    document.getElementById('btn-logout')?.addEventListener('click', () => {
+      app.confirm({
+        title: 'Keluar Aplikasi',
+        message: 'Anda yakin ingin keluar dari sesi ini?',
+        confirmText: 'Keluar',
+        danger: true,
+        onConfirm: () => {
+          localStorage.removeItem('warung_user');
+          window.location.href = 'index.html';
+        }
+      });
+    });
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
