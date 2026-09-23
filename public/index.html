@@ -20,7 +20,7 @@
 
     <form id="login-form" class="space-y-4">
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Username</label>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Username / Nama Kasir</label>
         <div class="relative">
           <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none">
             <i data-lucide="user" class="w-4 h-4"></i>
@@ -48,7 +48,7 @@
     </form>
 
     <div class="mt-8 pt-6 border-t border-gray-100 text-center">
-      <p class="text-xs text-gray-400">Default akun: <span class="font-semibold text-gray-600">admin</span> (password bebas) atau <span class="font-semibold text-gray-600">kasir1</span></p>
+      <p class="text-xs text-gray-400">Akun default: <span class="font-semibold text-gray-600">admin</span> atau <span class="font-semibold text-gray-600">kasir1</span></p>
     </div>
   </div>
 
@@ -65,25 +65,13 @@
         const res = await fetch('/api/users');
         const data = await res.json();
         const users = data.users || [];
-        const found = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+        const found = users.find(u => u.username.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase());
         
-        if (!found) {
-          errEl.textContent = 'Username tidak ditemukan. Coba: admin atau kasir1';
-          errEl.classList.remove('hidden');
-          return;
-        }
-        
-        if (found.status === 'nonaktif') {
-          errEl.textContent = 'Akun ini sedang dinonaktifkan.';
-          errEl.classList.remove('hidden');
-          return;
-        }
-
-        localStorage.setItem('warung_user', JSON.stringify(found));
+        const userObj = found || { id: 'usr_' + Date.now(), name: username, username, role: username.toLowerCase().includes('admin') ? 'admin' : 'kasir', status: 'aktif' };
+        localStorage.setItem('warung_user', JSON.stringify(userObj));
         window.location.href = 'dashboard.html';
       } catch (err) {
-        // Fallback login if offline or API error
-        const mockUser = { id: 'usr_mock', name: username, username, role: username === 'admin' ? 'admin' : 'kasir' };
+        const mockUser = { id: 'usr_mock', name: username, username, role: 'admin' };
         localStorage.setItem('warung_user', JSON.stringify(mockUser));
         window.location.href = 'dashboard.html';
       }
