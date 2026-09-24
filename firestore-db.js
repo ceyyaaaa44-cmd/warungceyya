@@ -16,7 +16,19 @@ const saEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
 if (fs.existsSync(SA_PATH) || saEnv) {
   try {
     const admin = require('firebase-admin');
-    const serviceAccount = fs.existsSync(SA_PATH) ? require(SA_PATH) : JSON.parse(saEnv);
+    let serviceAccount;
+    if (fs.existsSync(SA_PATH)) {
+      serviceAccount = require(SA_PATH);
+    } else {
+      let rawEnv = saEnv.trim();
+      if (rawEnv.startsWith('"') && rawEnv.endsWith('"')) {
+        rawEnv = rawEnv.slice(1, -1);
+      }
+      serviceAccount = JSON.parse(rawEnv);
+    }
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
     if (!admin.apps.length) {
       admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
     }
