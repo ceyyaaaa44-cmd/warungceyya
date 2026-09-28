@@ -234,15 +234,20 @@
       { fps: 10, qrbox: { width: 250, height: 150 } },
       (decodedText) => {
         closeScanner();
-        const found = products.find(p => p.barcode === decodedText || p.name.toLowerCase().includes(decodedText.toLowerCase()));
+        const cleanScanned = String(decodedText).trim();
+        const found = products.find(p => {
+          const pbc = String(p.barcode || '').trim();
+          return pbc && (pbc === cleanScanned || pbc.includes(cleanScanned) || cleanScanned.includes(pbc));
+        });
         if (found) {
           addToCart(found.id);
           app.toast('Produk ditambahkan: ' + found.name);
         } else {
-          document.getElementById('pos-search').value = decodedText;
-          currentSearch = decodedText;
+          const cleanScanned = String(decodedText).trim();
+          document.getElementById('pos-search').value = cleanScanned;
+          currentSearch = cleanScanned;
           renderProducts();
-          app.toast('Pencarian barcode: ' + decodedText, 'info');
+          app.toast('Pencarian barcode: ' + cleanScanned, 'info');
         }
       },
       (error) => {}
