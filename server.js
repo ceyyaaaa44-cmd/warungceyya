@@ -19,6 +19,13 @@ function requireAuth(req, res, next) {
 
 /* ------------------------------ settings ------------------------------ */
 
+app.get('/api/db-status', (req, res) => {
+  res.json({
+    status: db.getInitStatus ? db.getInitStatus() : null,
+    useFirestore: db.useFirestore
+  });
+});
+
 app.get('/api/settings', (req, res) => res.json(db.getDB().settings));
 
 app.put('/api/settings', async (req, res) => {

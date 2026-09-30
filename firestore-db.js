@@ -13,6 +13,14 @@ let useFirestore = false;
 const SA_PATH = path.join(__dirname, 'serviceAccountKey.json');
 const saEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
 
+let initStatus = {
+  hasSaFile: fs.existsSync(SA_PATH),
+  hasSaEnv: !!saEnv,
+  saEnvLen: saEnv ? saEnv.length : 0,
+  useFirestore: false,
+  error: null,
+};
+
 if (fs.existsSync(SA_PATH) || saEnv) {
   try {
     const admin = require('firebase-admin');
@@ -37,11 +45,14 @@ if (fs.existsSync(SA_PATH) || saEnv) {
     firestore = getFirestore();
     FieldValue = AdminFieldValue;
     useFirestore = true;
+    initStatus.useFirestore = true;
     console.log('[DB] Firebase Firestore enabled');
   } catch (err) {
+    initStatus.error = err.message;
     console.warn('[DB] Firestore init failed, falling back to flat-file:', err.stack || err.message);
   }
 } else {
+  initStatus.error = 'No serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT found';
   console.log('[DB] No serviceAccountKey.json found, using flat-file JSON storage');
 }
 
@@ -399,5 +410,6 @@ function publicProduct(p) {
 module.exports = {
   getDB, load, save, saveSettings, addDoc, updateDoc, deleteDoc,
   uid, now, todayKey, dayKeyOf, nextInvoiceNo, publicProduct,
-  useFirestore,
+  get useFirestore() { return useFirestore; },
+  getInitStatus: () => initStatus,
 };
