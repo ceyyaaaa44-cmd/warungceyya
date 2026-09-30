@@ -21,6 +21,56 @@ let initStatus = {
   error: null,
 };
 
+function safeParseServiceAccount(raw) {
+  if (!raw) return null;
+  let str = String(raw).trim();
+  if (str.startsWith('"') && str.endsWith('"')) {
+    str = str.slice(1, -1);
+  }
+  // Try 1: Standard JSON parse
+  try {
+    return JSON.parse(str);
+  } catch (e) {}
+
+  // Try 2: Base64 decode
+  try {
+    const decoded = Buffer.from(str, 'base64').toString('utf8');
+    if (decoded.includes('private_key')) {
+      return JSON.parse(decoded);
+    }
+  } catch (e) {}
+
+  // Try 3: Fix bad escape characters
+  try {
+    const sanitized = str.replace(/\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g, '\\\\');
+    return JSON.parse(sanitized);
+  } catch (e) {}
+
+  // Try 4: Regex extraction
+  try {
+    const getField = (name) => {
+      const regex = new RegExp('"' + name + '"\\s*:\\s*"([^"]+)"');
+      const m = str.match(regex);
+      return m ? m[1] : '';
+    };
+    const pkMatch = str.match(/-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----/);
+    if (pkMatch) {
+      let pk = pkMatch[0].replace(/\\n/g, '\n').replace(/\\\\n/g, '\n');
+      if (!pk.endsWith('\n')) pk += '\n';
+      return {
+        type: getField('type') || 'service_account',
+        project_id: getField('project_id') || 'kasir-ceyya',
+        private_key_id: getField('private_key_id'),
+        private_key: pk,
+        client_email: getField('client_email') || 'firebase-adminsdk-fbsvc@kasir-ceyya.iam.gserviceaccount.com',
+        client_id: getField('client_id'),
+      };
+    }
+  } catch (e) {}
+
+  return JSON.parse(str);
+}
+
 if (fs.existsSync(SA_PATH) || saEnv) {
   try {
     const admin = require('firebase-admin');
@@ -30,13 +80,9 @@ if (fs.existsSync(SA_PATH) || saEnv) {
     if (fs.existsSync(SA_PATH)) {
       serviceAccount = require(SA_PATH);
     } else {
-      let rawEnv = saEnv.trim();
-      if (rawEnv.startsWith('"') && rawEnv.endsWith('"')) {
-        rawEnv = rawEnv.slice(1, -1);
-      }
-      serviceAccount = JSON.parse(rawEnv);
+      serviceAccount = safeParseServiceAccount(saEnv);
     }
-    if (serviceAccount.private_key) {
+    if (serviceAccount && serviceAccount.private_key) {
       serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
     }
     if (!getApps().length) {
