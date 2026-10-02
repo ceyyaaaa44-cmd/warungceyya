@@ -11,12 +11,15 @@ let FieldValue = null;
 let useFirestore = false;
 
 const SA_PATH = path.join(__dirname, 'serviceAccountKey.json');
+const saEnvB64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
 const saEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
 
 let initStatus = {
   hasSaFile: fs.existsSync(SA_PATH),
   hasSaEnv: !!saEnv,
   saEnvLen: saEnv ? saEnv.length : 0,
+  hasSaEnvB64: !!saEnvB64,
+  saEnvB64Len: saEnvB64 ? saEnvB64.length : 0,
   useFirestore: false,
   error: null,
 };
@@ -27,6 +30,16 @@ function safeParseServiceAccount(raw) {
   if (str.startsWith('"') && str.endsWith('"')) {
     str = str.slice(1, -1);
   }
+
+  // Try 0: Base64 env var (no escape issues possible)
+  if (saEnvB64 && str === String(saEnvB64).trim()) {
+    try {
+      const decoded = Buffer.from(str, 'base64').toString('utf8');
+      const obj = JSON.parse(decoded);
+      if (obj && obj.private_key) return obj;
+    } catch (e) {}
+  }
+
   // Try 1: Standard JSON parse
   try {
     return JSON.parse(str);
@@ -71,7 +84,7 @@ function safeParseServiceAccount(raw) {
   return JSON.parse(str);
 }
 
-if (fs.existsSync(SA_PATH) || saEnv) {
+if (fs.existsSync(SA_PATH) || saEnv || saEnvB64) {
   try {
     const admin = require('firebase-admin');
     const { getApps } = require('firebase-admin/app');
@@ -79,6 +92,9 @@ if (fs.existsSync(SA_PATH) || saEnv) {
     let serviceAccount;
     if (fs.existsSync(SA_PATH)) {
       serviceAccount = require(SA_PATH);
+    } else if (saEnvB64) {
+      const decoded = Buffer.from(String(saEnvB64).trim(), 'base64').toString('utf8');
+      serviceAccount = JSON.parse(decoded);
     } else {
       serviceAccount = safeParseServiceAccount(saEnv);
     }
@@ -98,7 +114,7 @@ if (fs.existsSync(SA_PATH) || saEnv) {
     console.warn('[DB] Firestore init failed, falling back to flat-file:', err.stack || err.message);
   }
 } else {
-  initStatus.error = 'No serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT found';
+  initStatus.error = 'No serviceAccountKey.json, FIREBASE_SERVICE_ACCOUNT, or FIREBASE_SERVICE_ACCOUNT_B64 found';
   console.log('[DB] No serviceAccountKey.json found, using flat-file JSON storage');
 }
 
